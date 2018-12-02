@@ -68,6 +68,10 @@ public class PhotoLoaderHelper implements LoaderManager.LoaderCallbacks<Cursor> 
             public void run() {
                 List<FolderBean> mFolderBeanList = new ArrayList<>();
                 PhotosResultBean photosResultBean = new PhotosResultBean();
+                if (cursor.isClosed()) {
+                    mCallbacks.onAlbumMediaReset();
+                    return;
+                }
                 while (cursor.moveToNext()){
                     String path = cursor.getString(cursor.getColumnIndex(MediaStore.Images.Media.DATA));
                     File parentFile = new File(path).getParentFile();

@@ -28,6 +28,7 @@ import com.yuepeng.photo.photoloader.Util.ListImgDirPopuWindow;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -54,17 +55,26 @@ public class MainActivity extends AppCompatActivity {
 
     private ListImgDirPopuWindow mPopuWindow;
     private PhotoLoaderHelper loaderHelper = new PhotoLoaderHelper();
-    private Handler mHandle = new Handler(){
+    private Handler  mHandle = new MessageHandler(this);
+    private static class MessageHandler extends Handler{
+        private WeakReference<MainActivity> mActivity;
+
+        private MessageHandler(MainActivity activity){
+            mActivity = new WeakReference<>(activity);
+        }
+
         @Override
         public void handleMessage(Message msg) {
-            progressDialog.dismiss();
-            bindDatasToGridView();
+          mActivity.get().getPhotoData();
         }
-    };
-
+    }
+    public void   getPhotoData(){
+        progressDialog.dismiss();
+        bindDatasToGridView();
+    }
     private void bindDatasToGridView() {
         if (mCurrentFile==null) {
-            Toast.makeText(this, "没有图片", Toast.LENGTH_LONG);
+            Toast.makeText(this, "没有图片", Toast.LENGTH_LONG).show();
             return;
         }
         mImgs = Arrays.asList(mCurrentFile.list());
@@ -187,5 +197,19 @@ public class MainActivity extends AppCompatActivity {
             return  true;
         }
         return super.onKeyDown(keyCode, event);
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        loaderHelper.onDestroy();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        mHandle.removeCallbacksAndMessages(null);
     }
 }
